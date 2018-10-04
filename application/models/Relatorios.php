@@ -1,0 +1,334 @@
+<?php
+
+/**
+ * Created by PhpStorm.
+ * User: robson.salaberry
+ * Date: 25/07/2018
+ * Time: 11:27
+ */
+
+class Relatorios extends MY_Model
+{
+
+    public function retornaConsolidadoTipo1($nuVigencia = null,$tpRelatorio = null,$varWhere = null,$publico = null)
+    {
+        $select = '';
+        $where = '';
+        $groupby = '';
+
+        $arrParams = array();
+
+        if ($tpRelatorio == 'porRegiao') {
+            $select .= "(CASE
+                WHEN DOM.CO_UF_IBGE IN ('50','51','52','53') THEN 'CENTRO-OESTE'
+                WHEN DOM.CO_UF_IBGE IN ('41','42','43') THEN 'SUL'
+                WHEN DOM.CO_UF_IBGE IN ('11','12','13','14','15','16','17') THEN 'NORTE'
+                WHEN DOM.CO_UF_IBGE IN ('21','22','23','24','25','26','27','28','29') THEN 'NORDESTE'
+                WHEN DOM.CO_UF_IBGE IN ('31','32','33','35') THEN 'SUDESTE'
+                ELSE 'OUTRAS REGIOES' END) REGIAO,
+                COUNT(ACOMP.CO_DSEI) DSEI,
+                COUNT(PJ.NO_PESSOA_JURIDICA) NO_PESSOA_JURIDICA,
+                COUNT(EAS.CO_CNES) CO_CNES,
+                COUNT(EAS.NO_EAS_VISIVEL) NO_EAS_VISIVEL,";
+            $groupby .= "GROUP BY (CASE
+                WHEN DOM.CO_UF_IBGE IN ('50','51','52','53') THEN 'CENTRO-OESTE'
+                WHEN DOM.CO_UF_IBGE IN ('41','42','43') THEN 'SUL'
+                WHEN DOM.CO_UF_IBGE IN ('11','12','13','14','15','16','17') THEN 'NORTE'
+                WHEN DOM.CO_UF_IBGE IN ('21','22','23','24','25','26','27','28','29') THEN 'NORDESTE'
+                WHEN DOM.CO_UF_IBGE IN ('31','32','33','35') THEN 'SUDESTE'
+                ELSE 'OUTRAS REGIOES' END)";
+            if ($varWhere != ''){
+                if ($varWhere == 'CO'){
+                    $where .= "AND
+                    DOM.CO_UF_IBGE IN ('50','51','52','53')";
+                }
+                if ($varWhere == 'NO'){
+                    $where .= "AND
+                    DOM.CO_UF_IBGE IN ('11','12','13','14','15','16','17')";
+                }
+                if ($varWhere == 'NR'){
+                    $where .= "AND
+                    DOM.CO_UF_IBGE IN ('21','22','23','24','25','26','27','28','29')";
+                }
+                if ($varWhere == 'SU'){
+                    $where .= "AND
+                    DOM.CO_UF_IBGE IN ('31','32','33','35')";
+                }
+                if ($varWhere == 'SL'){
+                    $where .= "AND
+                    DOM.CO_UF_IBGE IN ('41','42','43')";
+                }
+            }
+        }
+
+        if ($tpRelatorio == 'porEstado') {
+
+
+            if ($varWhere != '') {
+                $where .= " AND DOM.CO_UF_IBGE = :CO_UF_IBGE";
+                array_push($arrParams,)
+                $this->params['CO_UF_IBGE'] = $varWhere;
+            }
+        }
+
+        if ($tpRelatorio == 'porMunicipio') {
+
+
+            if ($varWhere != '') {
+                $where .= " AND DOM.CO_MUNICIPIO_IBGE = :CO_MUNICIPIO_IBGE";
+                $this->params['CO_MUNICIPIO_IBGE'] = $varWhere;
+            }
+        }
+
+        if ($tpRelatorio == 'porEas') {
+            $select .= "EAS.CO_CNES,
+                        EAS.NO_EAS_VISIVEL,
+                        COUNT(ACOMP.CO_DSEI) DSEI,
+                        COUNT(PJ.NO_PESSOA_JURIDICA) NO_PESSOA_JURIDICA,";
+            $groupby .= "GROUP BY EAS.CO_CNES, EAS.NO_EAS_VISIVEL";
+            if ($varWhere != '') {
+                $where .= " AND EAS.CO_SEQ_EAS_VISIVEL = :CO_SEQ_EAS_VISIVEL";
+                $this->params['CO_SEQ_EAS_VISIVEL'] = $varWhere;
+            }
+        }
+
+        if ($tpRelatorio == 'porDsei') {
+            $select .= "ACOMP.CO_DSEI DSEI,
+                        PJ.NO_PESSOA_JURIDICA,
+                        COUNT(EAS.CO_CNES) CO_CNES,
+                        COUNT(EAS.NO_EAS_VISIVEL) NO_EAS_VISIVEL,";
+            $groupby .= "GROUP BY ACOMP.CO_DSEI, PJ.NO_PESSOA_JURIDICA";
+            if ($varWhere != '1') {
+                $where .= " AND ACOMP.CO_DSEI = :CO_DSEI";
+                $this->params['CO_DSEI'] = $varWhere;
+            }
+        }
+
+        if ($publico == 'geral') {
+            $where .= " AND FAM.ST_QUILOMBOLA != '1' AND FAM.ST_RESIDE_INDIGENA != '1'";
+        } else if ($publico == 'indigenas') {
+            $where .= " AND FAM.ST_RESIDE_INDIGENA = '1'";
+        } else if ($publico == 'quilombolas'){
+            $where .= " AND FAM.ST_QUILOMBOLA = '1'";
+        }
+
+
+        $sql = "SELECT {$select}
+                COUNT (ACOMP.CO_SEQ_BFA_ACOMPANHAMENTO) QTD_TOTAL_ACOMPANHAMENTOS,
+                SUM(DECODE(ACOMP.ST_PESSOA_NAO_ACOMPANHADA,'S',1,0)) QTD_BENEFICIARIOS_ACOMPANHADOS,
+                SUM(CASE WHEN PESS.CO_EAS_VISIVEL IS NOT NULL THEN 1 ELSE 0 END) QTD_BENEFICIARIOS_VINCULADOS,
+                SUM(DECODE(PESS.ST_OBRIGATORIO,'1',1,0)) QTD_BENEF_ACOMP_OBRIGATORIO,
+                SUM(CASE WHEN PESS.ST_OBRIGATORIO = '1' AND RL.DT_ACOMPANHAMENTO IS NULL THEN 1 ELSE 0 END) QTD_BENEF_OBR_A_SEREM_ACOMP,
+                SUM(CASE WHEN PESS.ST_OBRIGATORIO = '1' AND RL.DT_ACOMPANHAMENTO IS NOT NULL THEN 1 ELSE 0 END) QTD_BENEF_OBR_ACOMP,
+                SUM(DECODE(PESS.ST_OBRIGATORIO,'0',1,0)) QTD_BENEF_ACOMP_NAO_OBRIGAT,
+                SUM(CASE WHEN PESS.ST_OBRIGATORIO = '0' AND RL.DT_ACOMPANHAMENTO IS NULL THEN 1 ELSE 0 END) QTD_BENEF_N_OBR_A_SEREM_ACOMP,
+                SUM(CASE WHEN PESS.ST_OBRIGATORIO = '0' AND RL.DT_ACOMPANHAMENTO IS NOT NULL THEN 1 ELSE 0 END) QTD_BENEF_N_OBR_ACOMP,
+                SUM(CASE WHEN PESS.TP_PESSOA = '3' AND RL.DT_ACOMPANHAMENTO IS NULL THEN 1 ELSE 0 END) QTD_BENEF_CRIAN_A_SEREM_ACOMP,
+                SUM(CASE WHEN PESS.TP_PESSOA = '3' AND RL.DT_ACOMPANHAMENTO IS NOT NULL THEN 1 ELSE 0 END) QTD_BENEF_CRIAN_ACOMP,
+                SUM(DECODE(ACOMP.ST_VACINACAO,'S',1,0)) QTD_CRIANCA_VACINACAO_EM_DIA,
+                SUM(DECODE(ACOMP.ST_GESTANTE,'S',1,0)) QTD_GESTANTE,
+                SUM(DECODE(ACOMP.ST_PRE_NATAL,'S',1,0)) QTD_GESTANTE_PRE_NATAL_EM_DIA,
+                SUM(CASE WHEN ACOMP.ST_GESTANTE = 'S' AND ACOMP.DT_ULTIMA_MENSTRUACAO IS NOT NULL THEN 1 ELSE 0 END) QTD_GESTANTE_DADOS_NUTRIC,
+
+                SUM(CASE WHEN FAM.ST_RESIDE_INDIGENA = '1' AND PESS.ST_OBRIGATORIO = '1' AND RL.DT_ACOMPANHAMENTO IS NULL THEN 1 ELSE 0 END) QTD_INDIG_OBR_A_SEREM_ACOMP,
+                SUM(CASE WHEN FAM.ST_RESIDE_INDIGENA = '1' AND PESS.ST_OBRIGATORIO = '1' AND RL.DT_ACOMPANHAMENTO IS NOT NULL THEN 1 ELSE 0 END) QTD_INDIG_OBR_ACOMP,
+                SUM(CASE WHEN FAM.ST_RESIDE_INDIGENA = '1' AND PESS.ST_OBRIGATORIO = '0' AND RL.DT_ACOMPANHAMENTO IS NULL THEN 1 ELSE 0 END) QTD_INDIG_N_OBR_A_SEREM_ACOMP,
+                SUM(CASE WHEN FAM.ST_RESIDE_INDIGENA = '1' AND PESS.ST_OBRIGATORIO = '0' AND RL.DT_ACOMPANHAMENTO IS NOT NULL THEN 1 ELSE 0 END) QTD_INDIG_N_OBR_ACOMP,
+
+                --QUILOMBOLAS
+                SUM(CASE WHEN FAM.ST_QUILOMBOLA = '1' THEN 1 ELSE 0 END) QTD_QUILOMBOLA,
+                SUM(CASE WHEN FAM.ST_QUILOMBOLA = '1' AND PESS.ST_OBRIGATORIO = '1' AND RL.DT_ACOMPANHAMENTO IS NULL THEN 1 ELSE 0 END) QTD_QUILOM_OBR_A_SEREM_ACOMP,
+                SUM(CASE WHEN FAM.ST_QUILOMBOLA = '1' AND PESS.ST_OBRIGATORIO = '1' AND RL.DT_ACOMPANHAMENTO IS NOT NULL THEN 1 ELSE 0 END) QTD_QUILOM_OBR_ACOMP,
+                SUM(CASE WHEN FAM.ST_QUILOMBOLA = '1' AND PESS.ST_OBRIGATORIO = '0' AND RL.DT_ACOMPANHAMENTO IS NULL THEN 1 ELSE 0 END) QTD_QUILOM_N_OBR_A_SEREM_ACOMP,
+                SUM(CASE WHEN FAM.ST_QUILOMBOLA = '1' AND PESS.ST_OBRIGATORIO = '0' AND RL.DT_ACOMPANHAMENTO IS NOT NULL THEN 1 ELSE 0 END) QTD_QUILOM_N_OBR_ACOMP,
+
+                SUM(CASE WHEN FAM.ST_QUILOMBOLA = '1' AND PESS.TP_PESSOA = '3' THEN 1 ELSE 0 END) QTD_CRIAN_QUILOMBOLA,
+                SUM(CASE WHEN FAM.ST_QUILOMBOLA = '1' AND PESS.TP_PESSOA = '3' AND RL.DT_ACOMPANHAMENTO IS NULL THEN 1 ELSE 0 END) QTD_CRIAN_QUIL_A_SER_ACOMP,
+                SUM(CASE WHEN FAM.ST_QUILOMBOLA = '1' AND PESS.TP_PESSOA = '3' AND RL.DT_ACOMPANHAMENTO IS NOT NULL THEN 1 ELSE 0 END) QTD_CRIAN_QUIL_ACOMP,
+
+                SUM(CASE WHEN FAM.ST_QUILOMBOLA = '1' AND PESS.TP_PESSOA = '3' AND ACOMP.ST_VACINACAO = 'S' THEN 1 ELSE 0 END) QTD_CRIAN_QUIL_VAC_EM_DIA,
+                SUM(CASE WHEN FAM.ST_QUILOMBOLA = '1' AND PESS.TP_PESSOA = '3' AND ACOMP.ST_NUTRICIONAL_CRIANCA = 'S' THEN 1 ELSE 0 END) QTD_CRIAN_QUIL_DAD_NUTRIC,
+
+                SUM(CASE WHEN FAM.ST_QUILOMBOLA = '1' AND ACOMP.ST_GESTANTE = 'S' THEN 1 ELSE 0 END) QTD_GESTANTE_QUILOMBOLA,
+                SUM(CASE WHEN FAM.ST_QUILOMBOLA = '1' AND ACOMP.ST_PRE_NATAL = 'S' THEN 1 ELSE 0 END) QTD_GEST_QUIL_PRE_EM_DIA,
+                SUM(CASE WHEN FAM.ST_QUILOMBOLA = '1' AND ACOMP.DT_ULTIMA_MENSTRUACAO IS NOT NULL THEN 1 ELSE 0 END) QTD_GEST_QUIL_NUTRI_EM_DIA,
+
+
+                --MOTIVOS DE Nﾃグ ACOMPANHAMENTO E DESCUMPRIMENTO
+                --Nﾃグ ACOMPANHAMENTO
+                SUM(DECODE(ACOMP.ST_PESSOA_NAO_ACOMPANHADA,'N',1,0)) QTD_BENEF_NAO_ACOMPANHADO,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NAO_ACOMP,'1',1,0)) QTD_BEN_N_ACOMP_MOT_AUS,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NAO_ACOMP,'2',1,0)) QTD_BEN_N_ACOMP_MOT_N_RESIDE,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NAO_ACOMP,'3',1,0)) QTD_BEN_N_ACOMP_MOT_MUDOU,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NAO_ACOMP,'4',1,0)) QTD_BEN_N_ACOMP_MOT_FALEC,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NAO_ACOMP,'5',1,0)) QTD_BEN_N_ACOMP_MOT_END_INCOR,
+
+                --INFORMAﾃ�ﾃグ NUTRICIONAL
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NUTRI_CRIANCA,'1',1,0)) QTD_NUTRI_DESC_COND_IMPEDEM,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NUTRI_CRIANCA,'2',1,0)) QTD_NUTRI_DESC_IMPEDE_ACESS,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NUTRI_CRIANCA,'3',1,0)) QTD_NUTRI_DESC_HORARIO,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NUTRI_CRIANCA,'4',1,0)) QTD_NUTRI_DESC_RESP_NAO_CUM,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NUTRI_CRIANCA,'5',1,0)) QTD_NUTRI_DESC_NAO_COLETA,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NUTRI_CRIANCA,'6',1,0)) QTD_NUTRI_DESC_FALTA_EQUIP,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NUTRI_CRIANCA,'7',1,0)) QTD_NUTRI_DESC_FALTA_PROF,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NUTRI_CRIANCA,'8',1,0)) QTD_NUTRI_DESC_RESP_N_COMP,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NUTRI_CRIANCA,'9',1,0)) QTD_NUTRI_DESC_RECUSA_ACOMP,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NUTRI_CRIANCA,'10',1,0)) QTD_NUTRI_DESC_RISCO_SOC,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_NUTRI_CRIANCA,'11',1,0)) QTD_NUTRI_DESC_FORA_PROG,
+
+                --VACINAﾃ�ﾃグ
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_VACINACAO,'1',1,0)) QTD_VACI_DESC_COND_IMPEDEM,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_VACINACAO,'2',1,0)) QTD_VACI_DESC_IMPEDE_ACESS,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_VACINACAO,'3',1,0)) QTD_VACI_DESC_HORARIO,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_VACINACAO,'4',1,0)) QTD_VACI_DESC_RESP_NAO_CUM,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_VACINACAO,'5',1,0)) QTD_VACI_DESC_NAO_COLETA,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_VACINACAO,'6',1,0)) QTD_VACI_DESC_FALTA_EQUIP,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_VACINACAO,'7',1,0)) QTD_VACI_DESC_FALTA_PROF,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_VACINACAO,'8',1,0)) QTD_VACI_DESC_RESP_N_COMP,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_VACINACAO,'9',1,0)) QTD_VACI_DESC_RECUSA_ACOMP,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_VACINACAO,'10',1,0)) QTD_VACI_DESC_RISCO_SOC,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_VACINACAO,'11',1,0)) QTD_VACI_DESC_FORA_PROG,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_VACINACAO,'12',1,0)) QTD_VACI_DESC_COND_ESPEC,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_VACINACAO,'13',1,0)) QTD_VACI_DESC_FALTA_VACI,
+
+                 --PRENATAL
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_PRE_NATAL,'1',1,0)) QTD_PRENAT_DESC_COND_IMPEDEM,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_PRE_NATAL,'2',1,0)) QTD_PRENAT_DESC_IMPEDE_ACESS,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_PRE_NATAL,'3',1,0)) QTD_PRENAT_DESC_HORARIO,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_PRE_NATAL,'4',1,0)) QTD_PRENAT_DESC_RESP_NAO_CUM,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_PRE_NATAL,'5',1,0)) QTD_PRENAT_DESC_NAO_COLETA,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_PRE_NATAL,'6',1,0)) QTD_PRENAT_DESC_FALTA_EQUIP,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_PRE_NATAL,'7',1,0)) QTD_PRENAT_DESC_FALTA_PROF,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_PRE_NATAL,'8',1,0)) QTD_PRENAT_DESC_RESP_N_COMP,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_PRE_NATAL,'9',1,0)) QTD_PRENAT_DESC_RECUSA_ACOMP,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_PRE_NATAL,'10',1,0)) QTD_PRENAT_DESC_RISCO_SOC,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_PRE_NATAL,'11',1,0)) QTD_PRENAT_DESC_FORA_PROG,
+                SUM(DECODE(ACOMP.CO_BFA_MOTIVO_PRE_NATAL,'14',1,0)) QTD_PRENAT_DESC_FALTA_SERV,
+
+                --ESUS
+                SUM(DECODE(ACOMP.CO_SISTEMA_ORIGEM_ACOMP,'5',1,0)) QTD_BENEC_IMP_ESUS,
+                SUM(CASE WHEN ACOMP.ST_GESTANTE = 'S' AND ACOMP.CO_SISTEMA_ORIGEM_ACOMP = '5' THEN 1 ELSE 0 END) QTD_GESTANTE_IMP_ESUS,
+                SUM(CASE WHEN PESS.TP_PESSOA = '3' AND ACOMP.CO_SISTEMA_ORIGEM_ACOMP = '5' THEN 1 ELSE 0 END) QTD_CRIANCA_IMP_ESUS,
+
+                --SISPRENATAL
+                SUM(CASE WHEN ACOMP.ST_GESTANTE = 'S' AND ACOMP.CO_SISTEMA_ORIGEM_ACOMP = '4' THEN 1 ELSE 0 END) QTD_GESTANTE_IMP_SISPRENATAL,
+                SUM(CASE WHEN ACOMP.ST_GESTANTE = 'S' AND ACOMP.ST_PRE_NATAL = 'S' AND ACOMP.CO_SISTEMA_ORIGEM_ACOMP = '4' THEN 1 ELSE 0 END) QTD_GEST_IMP_SISPR_PRE_EM_DIA,
+
+                SUM(CASE WHEN ACOMP.ST_GESTANTE = 'S' AND ACOMP.DT_ULTIMA_MENSTRUACAO IS NOT NULL AND ACOMP.CO_SISTEMA_ORIGEM_ACOMP = '4' THEN 1 ELSE 0 END) QTD_GEST_IMP_SISPR_DADOS_NUTRI
+
+            FROM
+                DBSISVAN.TB_BFA_PESSOA PESS
+                INNER JOIN DBSISVAN.TB_BFA_FAMILIA FAM ON FAM.CO_SEQ_BFA_FAMILIA = PESS.CO_BFA_FAMILIA AND FAM.ST_REGISTRO_ATIVO = :ST_REGISTRO_ATIVO
+                LEFT JOIN DBSISVAN.RL_BFA_PESSOA_ACOMPANHAMENTO RL ON RL.CO_BFA_PESSOA = PESS.CO_SEQ_BFA_PESSOA AND RL.NU_VIGENCIA = :NU_VIGENCIA
+                LEFT JOIN DBSISVAN.TB_BFA_ACOMPANHAMENTO ACOMP ON ACOMP.CO_SEQ_BFA_ACOMPANHAMENTO = RL.CO_BFA_ACOMPANHAMENTO AND ACOMP.ST_REGISTRO_ATIVO = :ST_REGISTRO_ATIVO
+                LEFT JOIN DBSISVAN.TB_BFA_EAS_VISIVEL EAS ON EAS.CO_SEQ_EAS_VISIVEL = PESS.CO_EAS_VISIVEL
+                LEFT JOIN DBSISVAN.TB_BFA_DOMICILIO DOM ON DOM.CO_SEQ_BFA_DOMICILIO = PESS.CO_BFA_DOMICILIO
+
+                LEFT JOIN DBCGPAN.TB_PESSOA_JURIDICA PJ ON PJ.CO_SEQ_PESSOA_JURIDICA = ACOMP.CO_DSEI
+--ADICIONAR DEPOIS INNER JOIN NA TABELA DE VIGENCIA
+
+            WHERE
+            PESS.ST_REGISTRO_ATIVO = :ST_REGISTRO_ATIVO
+            {$where}
+
+            {$groupby}";
+
+        $this->params(array(
+            'NU_VIGENCIA' => $nuVigencia,
+            'ST_REGISTRO_ATIVO' => 'S'
+        ));
+
+        return $this->query($sql);
+    }
+
+
+    public function retornaIndividualizadoTipo1($nuVigencia = null,$coMunicipioIbge,$tpRelatorio = null,$varWhere = null)
+    {
+        $select = '';
+        $where = '';
+        $groupby = '';
+
+        if ($tpRelatorio == 'porNis') {
+            $select .= "";
+            $groupby .= "";
+            if ($varWhere != '') {
+                $where .= " AND P.NU_NIS_PESSOA = :NU_NIS";
+                $this->_params['NU_NIS'] = $varWhere;
+            }
+        }
+
+        if ($tpRelatorio == 'porBairro') {
+            $select .= "";
+            $groupby .= "";
+            if ($varWhere != '') {
+                $where .= " AND H.NO_BAIRRO = :NO_BAIRRO";
+                $this->_params['NO_BAIRRO'] = $varWhere;
+            }
+        }
+
+        if ($tpRelatorio == 'porEas') {
+            if ($varWhere != '') {
+                $where .= " AND P.CO_EAS_VISIVEL = :CO_EAS_VISIVEL";
+                $this->_params['CO_EAS_VISIVEL'] = $varWhere;
+            }
+        }
+
+        if ($tpRelatorio == 'porEasGestante') {
+            if ($varWhere != '') {
+                $where .= " AND P.CO_EAS_VISIVEL = :CO_EAS_VISIVEL AND ACOMP.ST_GESTANTE ='S'";
+                $this->_params['CO_EAS_VISIVEL'] = $varWhere;
+            }
+        }
+
+        if ($tpRelatorio == 'porBairroGestante') {
+            if ($varWhere != '') {
+                $where .= " AND H.NO_BAIRRO = :NO_BAIRRO AND ACOMP.ST_GESTANTE ='S'";
+                $this->_params['NO_BAIRRO'] = $varWhere;
+            }
+        }
+
+        if ($tpRelatorio == 'porNisGestante') {
+            if ($varWhere != '') {
+                $where .= " AND P.NU_NIS_PESSOA = :NU_NIS AND ACOMP.ST_GESTANTE ='S'";
+                $this->_params['NU_NIS'] = $varWhere;
+            }
+        }
+
+
+        $this->_sql = "SELECT P.CO_SEQ_BFA_PESSOA, P.NU_NIS_PESSOA AS NU_NIS, P.NO_PESSOA, TO_CHAR(P.DT_NASCIMENTO,'DD/MM/YYYY') DT_NASCIMENTO,
+                  DECODE(P.CO_SEXO, 2, 'Feminino', 'Masculino') AS DS_SEXO,
+                  DECODE(P.ST_OBRIGATORIO,'1','SIM','NﾃO') ST_OBRIGATORIO, P.CO_MUNICIPIO_IBGE,
+                  DECODE(CASE WHEN RL.DT_ACOMPANHAMENTO IS NOT NULL THEN 1 ELSE 0 END,1,'SIM','NﾃO') ST_ACOMPANHADO,
+                  H.NO_LOGRADOURO || ' ' || H.NU_COMPL_LOGRADOURO ENDERECO, H.NO_BAIRRO BAIRRO,RL.DT_ACOMPANHAMENTO,ACOMP.DT_ULTIMA_MENSTRUACAO,P.CO_EAS_VISIVEL,
+                  EAS.NO_EAS_VISIVEL ,EAS.CO_CNES, DP.NO_PROFISSIONAL, DECODE(ACOMP.ST_GESTANTE,'S','SIM','NﾃO') ST_GESTANTE,
+                  DECODE(CASE WHEN ACOMP.CO_BFA_MOTIVO_NUTRI_CRIANCA IS NOT NULL OR ACOMP.CO_BFA_MOTIVO_VACINACAO IS NOT NULL OR ACOMP.CO_BFA_MOTIVO_PRE_NATAL IS NOT NULL THEN 1 ELSE 0
+                  END,1,'SIM','NﾃO') DESCUMPRIMENTO, MT.DS_MOTIVO, DECODE(CASE WHEN ACOMP.ST_GESTANTE = 'S' AND ACOMP.CO_SISTEMA_ORIGEM_ACOMP = '4' THEN 1 ELSE 0 END,1,'SIM','NﾃO') ST_SISPRENATAL,
+                  DECODE(CASE WHEN ACOMP.CO_SISTEMA_ORIGEM_ACOMP != '2' THEN 1 ELSE 0 END,1,'SIM','NﾃO') ST_OUTROS_SISTEMAS
+                  FROM DBSISVAN.TB_BFA_FAMILIA F
+                  INNER JOIN DBSISVAN.TB_BFA_PESSOA P ON (P.CO_BFA_FAMILIA = F.CO_SEQ_BFA_FAMILIA
+                  AND P.CO_SEXO IN (1,2)
+                  --AND TP_PESSOA IN (3,4)
+                  AND P.ST_REGISTRO_ATIVO = :ST_REGISTRO_ATIVO)
+                  LEFT JOIN DBSISVAN.RL_BFA_PESSOA_ACOMPANHAMENTO RL ON RL.CO_BFA_PESSOA = P.CO_SEQ_BFA_PESSOA AND RL.NU_VIGENCIA = :NU_VIGENCIA
+                  LEFT JOIN DBSISVAN.TB_BFA_ACOMPANHAMENTO ACOMP ON (ACOMP.CO_SEQ_BFA_ACOMPANHAMENTO = RL.CO_BFA_ACOMPANHAMENTO AND ACOMP.ST_REGISTRO_ATIVO = :ST_REGISTRO_ATIVO)
+                  LEFT JOIN DBSISVAN.TB_BFA_DOMICILIO H ON (H.CO_SEQ_BFA_DOMICILIO = P.CO_BFA_DOMICILIO AND H.ST_REGISTRO_ATIVO = :ST_REGISTRO_ATIVO)
+                  LEFT JOIN DBSISVAN.TB_BFA_EAS_VISIVEL EAS ON (EAS.CO_SEQ_EAS_VISIVEL = P.CO_EAS_VISIVEL AND EAS.ST_REGISTRO_ATIVO = :ST_REGISTRO_ATIVO)
+                  LEFT JOIN DBCNES.TB_DADOS_PROFISSIONAL_SUS DP ON (DP.CO_PROFISSIONAL_SUS = P.CO_CNS_PROF_VISIVEL AND DP.ST_REGISTRO_ATIVO = :ST_REGISTRO_ATIVO)
+                  LEFT JOIN DBSISVAN.TB_BFA_MOTIVO_DESCUMPRIMENTO MT ON ((MT.CO_BFA_MOTIVO_DESCUMPRIMENTO = ACOMP.CO_BFA_MOTIVO_NUTRI_CRIANCA OR MT.CO_BFA_MOTIVO_DESCUMPRIMENTO =
+                  ACOMP.CO_BFA_MOTIVO_VACINACAO OR MT.CO_BFA_MOTIVO_DESCUMPRIMENTO = ACOMP.CO_BFA_MOTIVO_PRE_NATAL) AND MT.ST_REGISTRO_ATIVO = :ST_REGISTRO_ATIVO)
+--ADICIONAR DEPOIS INNER JOIN NA TABELA DE VIGENCIA
+
+                  WHERE
+                  P.CO_MUNICIPIO_IBGE = :CO_MUNICIPIO_IBGE AND
+                  F.ST_REGISTRO_ATIVO = :ST_REGISTRO_ATIVO
+                  {$where}";
+
+        $this->_params['CO_MUNICIPIO_IBGE'] = $coMunicipioIbge;
+        $this->_params['NU_VIGENCIA'] = $nuVigencia;
+        $this->_params['ST_REGISTRO_ATIVO'] = 'S';
+
+        return $this->query()->result_array();
+    }
+
+
+}

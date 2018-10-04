@@ -1,0 +1,67 @@
+<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+
+ERROR - 12-07-2018 10:14:53 --> 404 Page Not Found: Public/file
+ERROR - 12-07-2018 10:44:45 --> 404 Page Not Found: Acompanhamento/localiza
+ERROR - 12-07-2018 11:35:18 --> 404 Page Not Found: Individuo/index
+ERROR - 12-07-2018 14:24:55 --> 404 Page Not Found: Vinculo/familia
+ERROR - 12-07-2018 14:25:26 --> 404 Page Not Found: Vinculo/eas
+ERROR - 12-07-2018 14:26:29 --> Severity: Notice --> Undefined variable: arr D:\wamp\www\dab\Sistemas\bfa\application\controllers\Vinculo.php 89
+ERROR - 12-07-2018 14:26:36 --> Severity: Notice --> Undefined variable: arr D:\wamp\www\dab\Sistemas\bfa\application\controllers\Vinculo.php 89
+ERROR - 12-07-2018 14:27:03 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 14:27:05 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 14:27:08 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 14:27:09 --> Severity: Notice --> Undefined variable: arr D:\wamp\www\dab\Sistemas\bfa\application\controllers\Vinculo.php 89
+ERROR - 12-07-2018 14:27:21 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 14:27:23 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 14:27:52 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 14:28:16 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 14:29:49 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:18:46 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:19:45 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:20:07 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:26:54 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:27:56 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:27:59 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:28:01 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:28:41 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:28:46 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:28:49 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:28:58 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:36:58 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:50:41 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:50:43 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:51:06 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:51:19 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:52:00 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:52:09 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 15:53:19 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:08:05 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:09:02 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:09:07 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:11:40 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:12:50 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:12:55 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:13:01 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:14:05 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:14:08 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:14:09 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:14:17 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:14:30 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:14:45 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:14:53 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:15:08 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:15:12 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:17:53 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:17:58 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:18:00 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:18:38 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:18:40 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 16:23:14 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 17:02:07 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 17:02:08 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 17:02:10 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 17:02:12 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 17:02:13 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 17:02:20 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 17:02:21 --> 404 Page Not Found: Public/js
+ERROR - 12-07-2018 17:25:15 --> 404 Page Not Found: Public/js
