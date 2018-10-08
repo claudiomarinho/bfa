@@ -10,7 +10,7 @@ node('maven') {
         input 'Aprovacao Coordenador'
         openshiftDeploy(deploymentConfig: 'bfateste')
     }
-    stage('promoting to QA') {
+    stage('Efetuando Deploy') {
        echo 'fake stage...'
        sleep 5 
     }
