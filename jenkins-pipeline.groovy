@@ -6,7 +6,7 @@ node('maven') {
     stage('verify') {
         echo 'dummy verification....'
     }
-    stage('deploy') {
+    stage('Aprovacao Coordenador') {
         input 'Aprovacao Coordenador'
         openshiftDeploy(deploymentConfig: 'bfateste')
     }
