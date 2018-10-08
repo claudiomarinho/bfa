@@ -1,9 +1,9 @@
 node('maven') {
-    stage('build') {
+    stage('Lendo Arquivos') {
         echo 'building app :)'
         openshiftBuild(buildConfig: 'bfateste', showBuildLogs: 'true')
     }
-    stage('verify') {
+    stage('Verificando') {
         echo 'dummy verification....'
     }
     stage('Aprovacao Coordenador') {
